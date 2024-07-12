@@ -1,0 +1,66 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% render 'nav' %}
+
+<div class="cart-out">
+    <div class="cart">
+        {% form 'cart', cart %}
+
+        {% comment %} <h1 class="title"> CART </h1> {% endcomment %}
+        {% if cart.empty? %}
+            <p> Your Cart is empty. </p>
+        {% else %}
+            {% for item in cart.items %}
+                <div class="cart-card" data-key="{{ item.key }}">
+                    <img class="img" src="{{ item.image | image_url: width: 200}}" />
+                    <div class="body-out">
+                        <div class="card-body">
+                            <h2 class="text"> {{item.title}} </h2>
+                            <p class="price">{{item.final_line_price | money}}</p>
+                            <div class="c-group">
+                                <input class="cart-input" name="updates[]" value="{{ item.quantity }}">
+                                <a href="{{ item.url_to_remove }}" class="remove"> Remove </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="cart-bottom">
+            <p class="total">SUBTOTAL ({{cart.item_count}} ITEMS): {{ cart.total_price | money}} </p>
+
+            <div class="btn-group">
+
+                <button class="btn" type="submit" name="checkout"> PROCEED TO CHECKOUT </button>
+            </div>
+            </div>
+            {% endif %}
+        {% endform %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+{{ 'cart.js' | asset_url | script_tag }}
+
+<script>
+    const preloader = document.querySelector('.preloader');
+    const fadeEffect = setInterval(() => {
+        // if we don't set opacity 1 in CSS, then
+        // it will be equaled to "" -- that's why
+        // we check it, and if so, set opacity to 1
+        if (!preloader.style.opacity) {
+        preloader.style.opacity = 1;
+        }
+        if (preloader.style.opacity > 0) {
+        preloader.style.opacity -= 0.1;
+        } else {
+        clearInterval(fadeEffect);
+        }
+    }, 200);
+
+    window.addEventListener('load', fadeEffect);  
+</script>

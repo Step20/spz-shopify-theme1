@@ -1,0 +1,8 @@
+{% if search.performed %}
+    <h1>Here's your results</h1>
+
+    {%for results in search.results%}
+    {%endfor%}
+{%else%}
+    <h1>Try searching for something</h1>
+{%endif%}

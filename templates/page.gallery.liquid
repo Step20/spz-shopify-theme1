@@ -1,0 +1,37 @@
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<div class="preloader"></div>
+
+<div class="gallery-out">
+    <div class="gallery">
+        <h1 class="title">GALLERY</h1>
+        <div class="content">
+            {{page.content}}
+        </div>
+    </div>
+</div>
+
+ {% render 'nav'%}
+
+ <script>
+    const preloader = document.querySelector('.preloader');
+    const fadeEffect = setInterval(() => {
+        // if we don't set opacity 1 in CSS, then
+        // it will be equaled to "" -- that's why
+        // we check it, and if so, set opacity to 1
+        if (!preloader.style.opacity) {
+        preloader.style.opacity = 1;
+        }
+        if (preloader.style.opacity > 0) {
+        preloader.style.opacity -= 0.1;
+        } else {
+        clearInterval(fadeEffect);
+        }
+    }, 200);
+
+    window.addEventListener('load', fadeEffect);  
+</script>

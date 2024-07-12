@@ -1,0 +1,245 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<div class="preloader"></div>
+
+{% render 'nav'%}
+
+<div class="product-out">
+    <div class="product-content">
+
+        <div class="left">
+            <h2 class="title">{{product.title}}</h2>
+            <div class="product-price">
+                <h4 class="compare {% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}hide{% endunless %}">
+                    {{product.selected_or_first_available_variant.compare_at_price | money}}
+                </h4>
+                <h4 class="price">
+                    {{product.selected_or_first_available_variant.price | money}}
+                </h4>
+            </div>
+            <div class="desc">
+                <p class="desc-title">DETAILS</p>
+                <h4 class="desc-text">{{product.description}}</h4>
+            </div>
+        </div>
+
+        <div class="mid">
+            {% if product.selected_or_first_available_variant.featured_image %}
+                {% assign featured = product.selected_or_first_available_variant.featured_image %}
+                <img id="product-image" class="product-image" src="{{ featured | image_url}}" />
+            {% else %}
+                {% assign featured = product.featured_image %}
+                <img id="product-image" class="product-image" src="{{ featured | image_url }}" />
+            {% endif %}
+
+            <ul class="product-image-thumbs">
+                {% for image in product.images %}
+                    <li class="thumb-img {% if image == featured %}selected{% endif %}">
+                        <img class="thumb-img" src="{{ image | image_url: master }}" />
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="small-view">
+                <div class="view-text">
+                    <h2 class="view-title">{{product.title}}</h2>
+                    <div class="product-price">
+                        <h2 class="compare {% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}hide{% endunless %}">
+                            {{product.selected_or_first_available_variant.compare_at_price | money}}
+                        </h2>
+                        <h2 class="view-price">
+                            {{product.selected_or_first_available_variant.price | money}}
+                        </h2>
+                    </div>
+                </div>
+                <div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="right">
+            {% form "product", product %}
+                <input id="product-id-right" type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
+                <div class="product-option">
+                    {% for option in product.options_with_values %}
+                        <label class="label" for="{{ option.name | handleize }}">{{ option.name | upcase }}</label>
+                        <div class="input-out"> 
+                            <fieldset class="input-field">
+                                <select name="{{ option.name }}" class="input-box">
+                                    {% for value in option.values %}
+                                        <option 
+                                            {% if option.selected_value == value %} 
+                                                selected 
+                                            {% endif %}
+                                            value="{{ value }}"
+                                            id="{{ option.name | handleize }}-{{ value | handleize }}">
+                                            {{ value }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </fieldset>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="btn-group">
+                    <button {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %} id="add-to-cart-right" class="btn-add" type="submit">
+                        {% if product.selected_or_first_available_variant.available %}
+                            ADD TO CART
+                        {% else %}
+                            OUT OF STOCK
+                        {% endif %}
+                    </button>
+                    <button {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %} id="buy-it-now-right" class="btn-add-now" type="submit">
+                        {% if product.selected_or_first_available_variant.available %}
+                            BUY IT NOW
+                        {% else %}
+                            OUT OF STOCK
+                        {% endif %}
+                    </button>
+                </div>
+            {% endform %}
+        </div>
+    </div>
+</div>
+
+<script>
+    var product = {{ product | json }};
+
+    function updateProductDetails(matchedVariant) {
+        // Update all hidden input fields with id="product-id"
+        document.querySelectorAll('input[id^="product-id"]').forEach(input => {
+            input.value = matchedVariant.id;
+        });
+
+        // Change URL
+        var url = new URL(window.location.href);
+        url.searchParams.set('variant', matchedVariant.id);
+        window.history.replaceState(null, null, url.toString());
+
+        // Change prices
+        document.querySelectorAll('.price').forEach(price => {
+            price.textContent = formatMoney(matchedVariant.price, "{{ shop.money_format }}");
+        });
+        document.querySelectorAll('.compare').forEach(compare => {
+            compare.textContent = formatMoney(matchedVariant.compare_at_price, "{{ shop.money_format }}");
+            if (matchedVariant.compare_at_price > matchedVariant.price) {
+                compare.classList.remove('hide');
+            } else {
+                compare.classList.add('hide');
+            }
+        });
+
+        // Change image
+        if (matchedVariant.featured_image) {
+            document.querySelector('#product-image').setAttribute('src', matchedVariant.featured_image.src);
+            document.querySelector('.product-image-thumbs li.selected').classList.remove('selected');
+            document.querySelectorAll('.product-image-thumbs li')[matchedVariant.featured_image.position - 1].classList.add('selected');
+        }
+
+        // Change button availability
+        document.querySelectorAll("#add-to-cart-right, #add-to-cart-small").forEach(button => {
+            if (matchedVariant.available) {
+                button.textContent = "Add to Cart";
+                button.disabled = false;
+            } else {
+                button.textContent = "Out of Stock";
+                button.disabled = true;
+            }
+        });
+
+        document.querySelectorAll("#buy-it-now-right, #buy-it-now-small").forEach(button => {
+            if (matchedVariant.available) {
+                button.textContent = "Buy It Now";
+                button.disabled = false;
+            } else {
+                button.textContent = "Out of Stock";
+                button.disabled = true;
+            }
+        });
+    }
+
+    // Add event listener to each select element
+    document.querySelectorAll('.product-option select').forEach(select => {
+        select.addEventListener('change', () => {
+            // Find selected options
+            var selectedOptions = [];
+            document.querySelectorAll('.product-option select').forEach(select => {
+                selectedOptions.push(select.options[select.selectedIndex].value);
+            });
+
+            // Finding the matched variant
+            var matchedVariant = product.variants.find(variant => {
+                var pass = true;
+                for (var i = 0; i < selectedOptions.length; i++) {
+                    if (selectedOptions.indexOf(variant.options[i]) === -1) {
+                        pass = false;
+                        break;
+                    }
+                }
+                return pass;
+            });
+
+            // Update product details if a variant is found
+            if (matchedVariant) {
+                updateProductDetails(matchedVariant);
+            }
+        });
+    });
+
+    // Update product image thumbs event listener
+    document.querySelectorAll('.product-image-thumbs li').forEach(li => {
+        li.addEventListener('click', () => {
+            document.querySelector('.product-image-thumbs li.selected').classList.remove('selected');
+            li.classList.add("selected");
+            document.querySelector('#product-image').setAttribute('src', li.querySelector('img').getAttribute('src'));
+        });
+    });
+
+    // Buy it now event listener
+    document.querySelectorAll('#buy-it-now-right, #buy-it-now-small').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            var form = button.closest("form");
+            var input = document.createElement('input');
+            input.value = "/checkout";
+            input.type = "hidden";
+            input.name = "return_to";
+            form.appendChild(input);
+            form.submit();
+        });
+    });
+
+    // Quantity increment and decrement event listeners
+    document.querySelector('.plus').addEventListener('click', () => {
+        var currentVal = Number(document.querySelector('#quantity').value);
+        document.querySelector("#quantity").value = currentVal + 1;
+    });
+
+    document.querySelector('.minus').addEventListener('click', () => {
+        var currentVal = Number(document.querySelector('#quantity').value);
+        if (currentVal > 1) {
+            document.querySelector("#quantity").value = currentVal - 1;
+        }
+    });
+</script>
+
+<script>
+    const preloader = document.querySelector('.preloader');
+    const fadeEffect = setInterval(() => {
+        if (!preloader.style.opacity) {
+            preloader.style.opacity = 1;
+        }
+        if (preloader.style.opacity > 0) {
+            preloader.style.opacity -= 0.1;
+        } else {
+            clearInterval(fadeEffect);
+        }
+    }, 200);
+
+    window.addEventListener('load', fadeEffect);  
+</script>

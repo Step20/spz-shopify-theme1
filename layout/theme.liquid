@@ -1,0 +1,13 @@
+<html>
+<head>
+        {{content_for_header}}
+        {{'style.css' | asset_url | stylesheet_tag}}
+        <link rel="icon" href="{{ 'SPZ.png' | asset_url }}" 
+          type="image/x-icon">
+</head>
+<body>
+        <script src="https://cdn.jsdelivr.net/npm/url-parse@1.4.3/dist/url-parse.min.js"></script>
+        {{content_for_layout}}
+        {{'scripts.js' | asset_url | script_tag}}
+</body>
+</html>

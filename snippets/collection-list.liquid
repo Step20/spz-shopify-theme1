@@ -1,0 +1,5 @@
+<div class="collection">
+    {% for product in collections['frontpage'].products  %}
+        {% render 'product-item', product: product%}
+    {% endfor %} 
+</div>
